@@ -36,8 +36,16 @@ spec:
               value: "0.0.0.0:{{ .Values.agent.ports.otlpHttp }}"
             - name: RADAR_GATEWAY_OTLP_ENDPOINT
               value: {{ .Values.agent.config.gatewayOtlpEndpoint | quote }}
+            {{- if .Values.agent.gateway.existingSecret }}
             - name: RADAR_GATEWAY_API_KEY
-              value: {{ .Values.agent.gateway.apiKey | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.agent.gateway.existingSecret | quote }}
+                  key: api-key
+            {{- else if .Values.agent.config.gatewayApiKey }}
+            - name: RADAR_GATEWAY_API_KEY
+              value: {{ .Values.agent.config.gatewayApiKey | quote }}
+            {{- end }}
             - name: NO_PROXY
               value: ".svc,.svc.cluster.local,.cluster.local,localhost,127.0.0.1"
             - name: no_proxy

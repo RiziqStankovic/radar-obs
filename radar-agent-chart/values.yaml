@@ -16,10 +16,11 @@ agent:
   config:
     healthEndpoint: 0.0.0.0:13133
     gatewayOtlpEndpoint: http://radar-gateway:4318
+    gatewayApiKey: ""
     hostMetricsInterval: 30s
     kubeletMetricsInterval: 30s
     kubeletEndpoint: https://${K8S_NODE_IP}:10250
-    kubeletInsecureSkipVerify: true
+    kubeletInsecureSkipVerify: false
     hostRootPath: /hostfs
   collectors:
     node:
@@ -45,7 +46,6 @@ agent:
   gateway:
     endpoint: ""
     existingSecret: ""
-    apiKey: ""
   resources: {}
   tolerations: []
   nodeSelector: {}

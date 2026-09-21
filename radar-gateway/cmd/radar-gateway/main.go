@@ -15,7 +15,7 @@ import (
 func main() {
 	port := os.Getenv("RADAR_GATEWAY_PORT")
 	if port == "" {
-		port = "8080"
+		port = "4318"
 	}
 	handler := ingest.NewHandler()
 	mux := http.NewServeMux()
@@ -23,6 +23,9 @@ func main() {
 	mux.HandleFunc("/readyz", health)
 	mux.HandleFunc("/metrics", handler.Metrics)
 	mux.HandleFunc("/v1/radar/events", handler.Events)
+	mux.HandleFunc("/v1/traces", handler.OTLP("traces"))
+	mux.HandleFunc("/v1/metrics", handler.OTLP("metrics"))
+	mux.HandleFunc("/v1/logs", handler.OTLP("logs"))
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
