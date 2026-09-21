@@ -38,6 +38,10 @@ spec:
               value: {{ .Values.agent.config.gatewayOtlpEndpoint | quote }}
             - name: RADAR_GATEWAY_API_KEY
               value: {{ .Values.agent.gateway.apiKey | quote }}
+            - name: NO_PROXY
+              value: ".svc,.svc.cluster.local,.cluster.local,localhost,127.0.0.1"
+            - name: no_proxy
+              value: ".svc,.svc.cluster.local,.cluster.local,localhost,127.0.0.1"
             - name: RADAR_HOST_METRICS_INTERVAL
               value: {{ .Values.agent.config.hostMetricsInterval | quote }}
             - name: RADAR_KUBELET_METRICS_INTERVAL

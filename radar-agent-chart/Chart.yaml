@@ -1,6 +1,6 @@
 apiVersion: v2
 name: radar-agent-chart
 description: Radar Agent unified collector runtime
-version: 0.1.2
+version: 0.1.3
 appVersion: "0.1.0"
 type: application
