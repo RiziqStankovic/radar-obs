@@ -45,6 +45,7 @@ agent:
   gateway:
     endpoint: ""
     existingSecret: ""
+    apiKey: ""
   resources: {}
   tolerations: []
   nodeSelector: {}

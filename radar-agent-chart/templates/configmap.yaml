@@ -48,6 +48,8 @@ data:
     exporters:
       otlphttp/radar-gateway:
         endpoint: ${env:RADAR_GATEWAY_OTLP_ENDPOINT}
+        headers:
+          authorization: Bearer ${env:RADAR_GATEWAY_API_KEY}
         compression: gzip
     service:
       extensions: [health_check]
