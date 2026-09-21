@@ -43,6 +43,149 @@ jobs:
             helm repo index .helm-repo --url "${REPO_URL}"
           fi
 
+      - name: Generate landing page
+        run: |
+          set -euo pipefail
+          cat > .helm-repo/index.html <<'HTML'
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Radar Helm Charts</title>
+            <style>
+              :root {
+                color-scheme: dark;
+                --bg: #0f172a;
+                --card: #111827;
+                --muted: #94a3b8;
+                --text: #e5e7eb;
+                --accent: #38bdf8;
+                --accent-2: #22c55e;
+                --border: rgba(148, 163, 184, 0.22);
+              }
+              * { box-sizing: border-box; }
+              body {
+                margin: 0;
+                min-height: 100vh;
+                display: grid;
+                place-items: center;
+                padding: 32px;
+                font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                background:
+                  radial-gradient(circle at top left, rgba(56, 189, 248, 0.22), transparent 34rem),
+                  radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.16), transparent 30rem),
+                  var(--bg);
+                color: var(--text);
+              }
+              main {
+                width: min(920px, 100%);
+                border: 1px solid var(--border);
+                border-radius: 28px;
+                padding: 36px;
+                background: rgba(17, 24, 39, 0.82);
+                box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+                backdrop-filter: blur(14px);
+              }
+              .badge {
+                display: inline-flex;
+                gap: 8px;
+                align-items: center;
+                padding: 8px 12px;
+                border: 1px solid var(--border);
+                border-radius: 999px;
+                color: var(--accent-2);
+                background: rgba(34, 197, 94, 0.08);
+                font-weight: 700;
+                font-size: 14px;
+              }
+              h1 {
+                margin: 24px 0 12px;
+                font-size: clamp(38px, 7vw, 76px);
+                line-height: 0.94;
+                letter-spacing: -0.06em;
+              }
+              p {
+                margin: 0;
+                max-width: 720px;
+                color: var(--muted);
+                font-size: 18px;
+                line-height: 1.7;
+              }
+              .grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                gap: 16px;
+                margin-top: 30px;
+              }
+              .card {
+                border: 1px solid var(--border);
+                border-radius: 18px;
+                padding: 18px;
+                background: rgba(15, 23, 42, 0.74);
+              }
+              .card h2 {
+                margin: 0 0 10px;
+                font-size: 15px;
+                text-transform: uppercase;
+                letter-spacing: 0.12em;
+                color: var(--accent);
+              }
+              code, pre {
+                font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+              }
+              pre {
+                overflow-x: auto;
+                margin: 0;
+                padding: 14px;
+                border-radius: 14px;
+                background: #020617;
+                color: #d1d5db;
+                font-size: 13px;
+                line-height: 1.6;
+              }
+              a { color: var(--accent); text-decoration: none; }
+              a:hover { text-decoration: underline; }
+              footer {
+                margin-top: 28px;
+                color: var(--muted);
+                font-size: 14px;
+              }
+            </style>
+          </head>
+          <body>
+            <main>
+              <span class="badge">● Helm repository online</span>
+              <h1>Radar Helm Charts</h1>
+              <p>
+                Static Helm chart repository for Radar observability components.
+                Use this endpoint from Helm or Argo CD to deploy Radar charts.
+              </p>
+
+              <section class="grid">
+                <div class="card">
+                  <h2>Add repo</h2>
+                  <pre>helm repo add radar-obs https://riziqstankovic.github.io/radar-obs
+helm repo update radar-obs</pre>
+                </div>
+                <div class="card">
+                  <h2>Search charts</h2>
+                  <pre>helm search repo radar-obs</pre>
+                </div>
+                <div class="card">
+                  <h2>Repository index</h2>
+                  <pre>curl -fsSL https://riziqstankovic.github.io/radar-obs/index.yaml</pre>
+                </div>
+              </section>
+
+              <footer>
+                Source: <a href="https://github.com/RiziqStankovic/radar-obs">github.com/RiziqStankovic/radar-obs</a>
+              </footer>
+            </main>
+          </body>
+          </html>
+          HTML
+
       - name: Publish to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
