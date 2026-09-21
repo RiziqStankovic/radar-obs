@@ -3,28 +3,33 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
-	"os"
+
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
 	"gitrepo.xlaxiata.id/radar/radar-agent/internal/collectors"
+	"gitrepo.xlaxiata.id/radar/radar-agent/internal/config"
 	"gitrepo.xlaxiata.id/radar/radar-agent/internal/gatewayclient"
 	runtimeagent "gitrepo.xlaxiata.id/radar/radar-agent/internal/runtime"
 )
 
 func main() {
-	port := env("RADAR_AGENT_PORT", "8080")
-	gateway := gatewayclient.New(os.Getenv("RADAR_GATEWAY_ENDPOINT"))
+	cfg := config.Load()
+	if err := cfg.Validate(); err != nil {
+		log.Fatal(err)
+	}
+
+	gateway := gatewayclient.New(cfg.GatewayEndpoint)
 	modules := runtimeagent.New(
-		runtimeagent.NewModule("node", enabled("RADAR_COLLECTOR_NODE_ENABLED", true), true, gateway),
-		runtimeagent.NewModule("cluster", enabled("RADAR_COLLECTOR_CLUSTER_ENABLED", true), false, gateway),
-		runtimeagent.NewModule("database", enabled("RADAR_COLLECTOR_DATABASE_ENABLED", false), false, gateway),
-		runtimeagent.NewModule("qan", enabled("RADAR_COLLECTOR_QAN_ENABLED", false), false, gateway),
-		runtimeagent.NewModule("otlp", enabled("RADAR_COLLECTOR_OTLP_ENABLED", true), true, gateway),
+		runtimeagent.NewModule("node", cfg.Collectors.Node, true, gateway),
+		runtimeagent.NewModule("cluster", cfg.Collectors.Cluster, false, gateway),
+		runtimeagent.NewModule("database", cfg.Collectors.Database, false, gateway),
+		runtimeagent.NewModule("qan", cfg.Collectors.QAN, false, gateway),
+		runtimeagent.NewModule("otlp", cfg.Collectors.OTLP, true, gateway),
 	)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -40,19 +45,20 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(modules.Status())
 	})
-	mux.HandleFunc("/metrics", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "text/plain; version=0.0.4")
-		_, _ = w.Write([]byte("# TYPE radar_agent_info gauge\nradar_agent_info 1\n"))
-	})
+	mux.HandleFunc("/metrics", metrics)
+	mux.HandleFunc("/v1/traces", otlpIngress("traces", gateway, cfg.Collectors.OTLP))
+	mux.HandleFunc("/v1/metrics", otlpIngress("metrics", gateway, cfg.Collectors.OTLP))
+	mux.HandleFunc("/v1/logs", otlpIngress("logs", gateway, cfg.Collectors.OTLP))
 
-	server := &http.Server{Addr: ":" + port, Handler: mux}
+	server := &http.Server{Addr: ":" + cfg.Port, Handler: mux}
 	go func() {
 		<-ctx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		_ = server.Shutdown(shutdownCtx)
 	}()
-	log.Printf("radar-agent listening on :%s", port)
+
+	log.Printf("radar-agent listening on :%s", cfg.Port)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
@@ -63,20 +69,41 @@ func health(w http.ResponseWriter, _ *http.Request) {
 	_, _ = w.Write([]byte("ok\n"))
 }
 
-func env(key, fallback string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return fallback
+func metrics(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; version=0.0.4")
+	_, _ = w.Write([]byte("# TYPE radar_agent_info gauge\nradar_agent_info 1\n"))
 }
 
-func enabled(key string, fallback bool) bool {
-	value := os.Getenv(key)
-	if value == "" {
-		return fallback
+func otlpIngress(signal string, sink collectors.Sink, enabled bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !enabled {
+			http.Error(w, "OTLP collector disabled", http.StatusNotFound)
+			return
+		}
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		defer r.Body.Close()
+		payload, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 10<<20))
+		if err != nil {
+			http.Error(w, "invalid request body", http.StatusBadRequest)
+			return
+		}
+		if len(payload) == 0 {
+			http.Error(w, "empty request body", http.StatusBadRequest)
+			return
+		}
+		if err := sink.Publish(r.Context(), collectors.Event{
+			Signal:  signal,
+			Source:  "otlp",
+			Payload: map[string]any{"content_type": r.Header.Get("Content-Type"), "bytes": len(payload)},
+		}); err != nil {
+			http.Error(w, "gateway unavailable", http.StatusBadGateway)
+			return
+		}
+		w.WriteHeader(http.StatusAccepted)
 	}
-	parsed, err := strconv.ParseBool(value)
-	return err == nil && parsed
 }
 
 var _ collectors.Sink = (*gatewayclient.Client)(nil)

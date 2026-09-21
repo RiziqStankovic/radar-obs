@@ -1,0 +1,58 @@
+global:
+  name: radar-agent
+  clusterId: ""
+  tenantId: ""
+
+agent:
+  enabled: true
+  image:
+    repository: ghcr.io/riziqstankovic/radar-agent
+    tag: main
+    pullPolicy: Always
+  ports:
+    health: 8080
+    otlpGrpc: 4317
+    otlpHttp: 4318
+  config:
+    healthEndpoint: 0.0.0.0:8080
+    gatewayOtlpEndpoint: http://radar-gateway:4318
+    hostMetricsInterval: 30s
+    kubeletMetricsInterval: 30s
+    kubeletEndpoint: https://${env:K8S_NODE_IP}:10250
+    kubeletInsecureSkipVerify: true
+    hostRootPath: /hostfs
+  collectors:
+    node:
+      enabled: true
+      hostMetrics: true
+      kubeletMetrics: true
+      logs: false
+    otlp:
+      enabled: true
+    cluster:
+      enabled: false
+      ownership: leader
+      leaseName: radar-cluster-collector
+    database:
+      enabled: false
+      ownership: leader
+      leaseName: radar-database-collector
+      targets: []
+    qan:
+      enabled: false
+      ownership: leader
+      targets: []
+  gateway:
+    endpoint: ""
+    existingSecret: ""
+  resources: {}
+  tolerations: []
+  nodeSelector: {}
+  affinity: {}
+
+rbac:
+  create: true
+
+service:
+  enabled: true
+  internalTrafficPolicy: Local
