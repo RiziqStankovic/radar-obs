@@ -165,8 +165,7 @@ jobs:
               <section class="grid">
                 <div class="card">
                   <h2>Add repo</h2>
-                  <pre>helm repo add radar-obs https://riziqstankovic.github.io/radar-obs
-helm repo update radar-obs</pre>
+                  <pre>helm repo add radar-obs https://riziqstankovic.github.io/radar-obs<br>helm repo update radar-obs</pre>
                 </div>
                 <div class="card">
                   <h2>Search charts</h2>
