@@ -26,7 +26,7 @@ receivers:
   kubeletstats:
     collection_interval: ${env:RADAR_KUBELET_METRICS_INTERVAL}
     auth_type: serviceAccount
-    endpoint: ${env:RADAR_KUBELET_ENDPOINT}
+    endpoint: https://${env:K8S_NODE_IP}:10250
     insecure_skip_verify: ${env:RADAR_KUBELET_INSECURE_SKIP_VERIFY}
     metric_groups:
       - node
@@ -60,5 +60,9 @@ service:
       exporters: [otlphttp/radar-gateway]
     metrics:
       receivers: [otlp, hostmetrics, kubeletstats]
+      processors: [memory_limiter, k8sattributes, batch]
+      exporters: [otlphttp/radar-gateway]
+    logs:
+      receivers: [otlp]
       processors: [memory_limiter, k8sattributes, batch]
       exporters: [otlphttp/radar-gateway]

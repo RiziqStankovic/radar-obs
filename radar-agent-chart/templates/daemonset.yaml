@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "radar-agent.fullname" . }}
+  labels:
+    {{- include "radar-agent.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "radar-agent.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        {{- include "radar-agent.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "radar-agent.fullname" . }}
+      containers:
+        - name: radar-agent
+          image: "{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
+          imagePullPolicy: {{ .Values.agent.image.pullPolicy }}
+          args: ["--config=/etc/radar-agent/otel-config.yaml"]
+          ports:
+            - name: otlp-grpc
+              containerPort: {{ .Values.agent.ports.otlpGrpc }}
+            - name: otlp-http
+              containerPort: {{ .Values.agent.ports.otlpHttp }}
+            - name: health
+              containerPort: {{ .Values.agent.ports.health }}
+          env:
+            - name: RADAR_AGENT_HEALTH_ENDPOINT
+              value: {{ .Values.agent.config.healthEndpoint | quote }}
+            - name: RADAR_OTLP_GRPC_ENDPOINT
+              value: "0.0.0.0:{{ .Values.agent.ports.otlpGrpc }}"
+            - name: RADAR_OTLP_HTTP_ENDPOINT
+              value: "0.0.0.0:{{ .Values.agent.ports.otlpHttp }}"
+            - name: RADAR_GATEWAY_OTLP_ENDPOINT
+              value: {{ .Values.agent.config.gatewayOtlpEndpoint | quote }}
+            - name: RADAR_HOST_METRICS_INTERVAL
+              value: {{ .Values.agent.config.hostMetricsInterval | quote }}
+            - name: RADAR_KUBELET_METRICS_INTERVAL
+              value: {{ .Values.agent.config.kubeletMetricsInterval | quote }}
+            - name: RADAR_KUBELET_ENDPOINT
+              value: "https://${K8S_NODE_IP}:10250"
+            - name: RADAR_KUBELET_INSECURE_SKIP_VERIFY
+              value: {{ .Values.agent.config.kubeletInsecureSkipVerify | quote }}
+            - name: RADAR_HOST_ROOT_PATH
+              value: {{ .Values.agent.config.hostRootPath | quote }}
+            - name: K8S_NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/radar-agent
+              readOnly: true
+            - name: hostfs
+              mountPath: /hostfs
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /
+              port: health
+          readinessProbe:
+            httpGet:
+              path: /
+              port: health
+          resources:
+            {{- toYaml .Values.agent.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "radar-agent.fullname" . }}-config
+        - name: hostfs
+          hostPath:
+            path: /
+            type: Directory
+      tolerations:
+        {{- toYaml .Values.agent.tolerations | nindent 8 }}
+      nodeSelector:
+        {{- toYaml .Values.agent.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.agent.affinity | nindent 8 }}

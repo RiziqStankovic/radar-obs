@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "radar-agent.fullname" . }}-config
+  labels:
+    {{- include "radar-agent.labels" . | nindent 4 }}
+data:
+  otel-config.yaml: |
+    extensions:
+      health_check:
+        endpoint: ${env:RADAR_AGENT_HEALTH_ENDPOINT}
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: ${env:RADAR_OTLP_GRPC_ENDPOINT}
+          http:
+            endpoint: ${env:RADAR_OTLP_HTTP_ENDPOINT}
+      hostmetrics:
+        collection_interval: ${env:RADAR_HOST_METRICS_INTERVAL}
+        root_path: ${env:RADAR_HOST_ROOT_PATH}
+        scrapers:
+          cpu: {}
+          disk: {}
+          filesystem: {}
+          load: {}
+          memory: {}
+          network: {}
+          paging: {}
+          processes: {}
+      kubeletstats:
+        collection_interval: ${env:RADAR_KUBELET_METRICS_INTERVAL}
+        auth_type: serviceAccount
+        endpoint: https://${env:K8S_NODE_IP}:10250
+        insecure_skip_verify: ${env:RADAR_KUBELET_INSECURE_SKIP_VERIFY}
+        metric_groups: [node, pod, container]
+    processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_percentage: 80
+        spike_limit_percentage: 15
+      k8sattributes:
+        auth_type: serviceAccount
+        passthrough: false
+      batch:
+        timeout: 5s
+        send_batch_size: 1024
+    exporters:
+      otlphttp/radar-gateway:
+        endpoint: ${env:RADAR_GATEWAY_OTLP_ENDPOINT}
+        compression: gzip
+    service:
+      extensions: [health_check]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, k8sattributes, batch]
+          exporters: [otlphttp/radar-gateway]
+        metrics:
+          receivers: [otlp, hostmetrics, kubeletstats]
+          processors: [memory_limiter, k8sattributes, batch]
+          exporters: [otlphttp/radar-gateway]
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, k8sattributes, batch]
+          exporters: [otlphttp/radar-gateway]

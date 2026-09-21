@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "radar-agent.fullname" . }}
+  labels:
+    {{- include "radar-agent.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  internalTrafficPolicy: {{ .Values.service.internalTrafficPolicy }}
+  selector:
+    app.kubernetes.io/name: {{ include "radar-agent.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: otlp-grpc
+      port: {{ .Values.agent.ports.otlpGrpc }}
+      targetPort: otlp-grpc
+    - name: otlp-http
+      port: {{ .Values.agent.ports.otlpHttp }}
+      targetPort: otlp-http
+    - name: health
+      port: {{ .Values.agent.ports.health }}
+      targetPort: health

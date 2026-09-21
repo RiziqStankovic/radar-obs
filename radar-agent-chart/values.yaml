@@ -6,19 +6,19 @@ global:
 agent:
   enabled: true
   image:
-    repository: ghcr.io/riziqstankovic/radar-agent
+    repository: ziq02/radar-agent
     tag: main
     pullPolicy: Always
   ports:
-    health: 8080
+    health: 13133
     otlpGrpc: 4317
     otlpHttp: 4318
   config:
-    healthEndpoint: 0.0.0.0:8080
+    healthEndpoint: 0.0.0.0:13133
     gatewayOtlpEndpoint: http://radar-gateway:4318
     hostMetricsInterval: 30s
     kubeletMetricsInterval: 30s
-    kubeletEndpoint: https://${env:K8S_NODE_IP}:10250
+    kubeletEndpoint: https://${K8S_NODE_IP}:10250
     kubeletInsecureSkipVerify: true
     hostRootPath: /hostfs
   collectors:
