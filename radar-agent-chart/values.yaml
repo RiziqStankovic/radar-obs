@@ -27,7 +27,7 @@ agent:
       enabled: true
       hostMetrics: true
       kubeletMetrics: true
-      logs: false
+      logs: true
     otlp:
       enabled: true
     cluster:
