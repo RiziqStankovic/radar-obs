@@ -1,0 +1,45 @@
+global:
+  name: radar-gateway
+  namespace: radar-system
+
+image:
+  repository: radar-gateway
+  tag: dev
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 4318
+  annotations: {}
+
+config:
+  port: 4318
+  clickhouse:
+    url: http://clickhouse:8123
+    database: radar_metrics
+    existingSecret: radar-clickhouse
+    userKey: username
+    passwordKey: password
+    user: ""
+    password: ""
+
+probes:
+  liveness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

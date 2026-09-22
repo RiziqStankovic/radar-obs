@@ -1,7 +1,8 @@
 # Independently deployed radar-agent Collector distribution.
-FROM golang:1.24-bookworm AS builder
+FROM golang:1.25-bookworm AS builder
 WORKDIR /src
 COPY builder-config.yaml ./
+COPY otel-modules ./otel-modules
 RUN go install go.opentelemetry.io/collector/cmd/builder@v0.158.0 \
     && builder --config=builder-config.yaml --skip-get-modules=false
 

@@ -8,7 +8,7 @@
 
 ### Issue tracker
 
-Work is tracked as local markdown issues under `.scratch/`; use the conventions in `docs/agents/issue-tracker.md`.
+Work is tracked as local markdown issues under `.scratch/`; use `docs/agents/issue-tracker.md` and the active Wayfinder map under `.scratch/`.
 
 ### Domain docs
 

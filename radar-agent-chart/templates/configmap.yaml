@@ -1,20 +1,6 @@
 {{- if and .Values.agent.collectors.qan.enabled (not .Values.agent.collectors.database.enabled) }}
 {{- fail "agent.collectors.qan.enabled requires agent.collectors.database.enabled" }}
 {{- end }}
-{{- if .Values.agent.collectors.database.enabled }}
-{{- range .Values.agent.collectors.database.targets }}
-{{- if not .name }}{{ fail "every database target requires name" }}{{ end }}
-{{- if not .engine }}{{ fail (printf "database target %s requires engine" .name) }}{{ end }}
-{{- if not .endpoint }}{{ fail (printf "database target %s requires endpoint" .name) }}{{ end }}
-{{- if not .existingSecret }}{{ fail (printf "database target %s requires existingSecret" .name) }}{{ end }}
-{{- end }}
-{{- end }}
-{{- if .Values.agent.collectors.qan.enabled }}
-{{- range .Values.agent.collectors.qan.targets }}
-{{- if not .name }}{{ fail "every QAN target requires name" }}{{ end }}
-{{- if not .databaseTarget }}{{ fail (printf "QAN target %s requires databaseTarget" .name) }}{{ end }}
-{{- end }}
-{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -47,6 +33,24 @@ data:
           paging: {}
           processes: {}
 {{- end }}
+{{- if and .Values.agent.collectors.node.enabled .Values.agent.collectors.node.logs }}
+      filelog:
+        include:
+          - /var/log/pods/*/*/*.log
+        start_at: end
+        include_file_path: true
+        include_file_name: false
+        operators:
+          - type: container
+{{- end }}
+{{- if .Values.agent.collectors.qan.enabled }}
+      postgresqan:
+        dsn: ${env:RADAR_QAN_POSTGRES_DSN}
+        service_name: ${env:RADAR_QAN_POSTGRES_SERVICE_NAME}
+        agent_id: ${env:RADAR_QAN_AGENT_ID}
+        interval: ${env:RADAR_QAN_POSTGRES_INTERVAL}
+        include_query_examples: ${env:RADAR_QAN_POSTGRES_QUERY_EXAMPLES}
+{{- end }}
     processors:
       memory_limiter:
         check_interval: 1s
@@ -66,6 +70,12 @@ data:
           initial_interval: 1s
           max_interval: 10s
           max_elapsed_time: 30s
+{{- if .Values.agent.collectors.qan.enabled }}
+      radarqan:
+        endpoint: ${env:RADAR_GATEWAY_OTLP_ENDPOINT}
+        api_key: ${env:RADAR_GATEWAY_API_KEY}
+        timeout: 10s
+{{- end }}
     service:
       extensions: [health_check]
       pipelines:
@@ -82,12 +92,20 @@ data:
           processors: [memory_limiter, batch]
           exporters: [otlphttp/radar-gateway]
         logs:
-          receivers: [otlp]
+          receivers:
+            - otlp
+{{- if and .Values.agent.collectors.node.enabled .Values.agent.collectors.node.logs }}
+            - filelog
+{{- end }}
           processors: [memory_limiter, batch]
           exporters: [otlphttp/radar-gateway]
+{{- if .Values.agent.collectors.qan.enabled }}
+        logs/qan:
+          receivers: [postgresqan]
+          processors: [memory_limiter, batch]
+          exporters: [radarqan]
+{{- end }}
   qan-targets.yaml: |
-    # Metadata consumed by the database/QAN adapter when it is enabled.
-    # Secrets are mounted separately and are never rendered here.
     ownership: {{ .Values.agent.collectors.qan.ownership | quote }}
     leaseName: {{ .Values.agent.collectors.qan.leaseName | quote }}
     includeQueryExamples: {{ .Values.agent.collectors.qan.includeQueryExamples | default false }}

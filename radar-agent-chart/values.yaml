@@ -53,6 +53,9 @@ agent:
       ownership: leader
       leaseName: radar-qan-collector
       includeQueryExamples: false
+      dsn: ""
+      serviceName: postgresql
+      interval: 60s
       targets: []
       # Targets are metadata for the database QAN adapter. Credentials must
       # come from Kubernetes Secrets, never from this values file.

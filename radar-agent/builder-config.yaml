@@ -11,6 +11,10 @@ dist:
 receivers:
   - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v0.158.0
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.158.0
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/filelogreceiver v0.158.0
+  - gomod: gitrepo.xlaxiata.id/radar/radar-agent-otel-modules v0.0.0
+    import: gitrepo.xlaxiata.id/radar/radar-agent-otel-modules/receiver/postgresqanreceiver
+    path: ./otel-modules
 
 processors:
   - gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.158.0
@@ -18,6 +22,9 @@ processors:
 
 exporters:
   - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v0.158.0
+  - gomod: gitrepo.xlaxiata.id/radar/radar-agent-otel-modules v0.0.0
+    import: gitrepo.xlaxiata.id/radar/radar-agent-otel-modules/exporter/radarqanexporter
+    path: ./otel-modules
 
 extensions:
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension v0.158.0

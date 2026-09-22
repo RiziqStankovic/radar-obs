@@ -44,8 +44,16 @@ spec:
               value: {{ .Values.agent.collectors.qan.enabled | quote }}
             - name: RADAR_QAN_DISABLE_QUERY_EXAMPLES
               value: {{ (not .Values.agent.collectors.qan.includeQueryExamples) | quote }}
-            - name: RADAR_QAN_TARGETS_FILE
-              value: /etc/radar-agent/qan-targets.yaml
+            - name: RADAR_QAN_POSTGRES_DSN
+              value: {{ .Values.agent.collectors.qan.dsn | quote }}
+            - name: RADAR_QAN_POSTGRES_SERVICE_NAME
+              value: {{ .Values.agent.collectors.qan.serviceName | default "postgresql" | quote }}
+            - name: RADAR_QAN_POSTGRES_INTERVAL
+              value: {{ .Values.agent.collectors.qan.interval | default "60s" | quote }}
+            - name: RADAR_QAN_POSTGRES_QUERY_EXAMPLES
+              value: {{ .Values.agent.collectors.qan.includeQueryExamples | quote }}
+            - name: RADAR_QAN_AGENT_ID
+              value: {{ include "radar-agent.fullname" . | quote }}
             {{- if .Values.agent.gateway.existingSecret }}
             - name: RADAR_GATEWAY_API_KEY
               valueFrom:
@@ -81,10 +89,11 @@ spec:
             - name: hostfs
               mountPath: /hostfs
               readOnly: true
-            - name: qan-targets
-              mountPath: /etc/radar-agent/qan-targets.yaml
-              subPath: qan-targets.yaml
+{{- if and .Values.agent.collectors.node.enabled .Values.agent.collectors.node.logs }}
+            - name: varlog
+              mountPath: /var/log
               readOnly: true
+{{- end }}
 {{- range .Values.agent.collectors.database.targets }}
             - name: db-secret-{{ .name | kebabcase }}
               mountPath: /etc/radar-agent/secrets/{{ .name | kebabcase }}
@@ -108,12 +117,12 @@ spec:
           hostPath:
             path: /
             type: Directory
-        - name: qan-targets
-          configMap:
-            name: {{ include "radar-agent.fullname" . }}-config
-            items:
-              - key: qan-targets.yaml
-                path: qan-targets.yaml
+{{- if and .Values.agent.collectors.node.enabled .Values.agent.collectors.node.logs }}
+        - name: varlog
+          hostPath:
+            path: /var/log
+            type: Directory
+{{- end }}
 {{- range .Values.agent.collectors.database.targets }}
         - name: db-secret-{{ .name | kebabcase }}
           secret:

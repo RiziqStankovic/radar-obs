@@ -9,6 +9,20 @@ receivers:
         endpoint: ${env:RADAR_AGENT_OTLP_GRPC_ENDPOINT}
       http:
         endpoint: ${env:RADAR_AGENT_OTLP_HTTP_ENDPOINT}
+  postgresqan:
+    dsn: ${env:RADAR_QAN_POSTGRES_DSN}
+    service_name: ${env:RADAR_QAN_POSTGRES_SERVICE_NAME}
+    agent_id: ${env:RADAR_QAN_AGENT_ID}
+    interval: ${env:RADAR_QAN_POSTGRES_INTERVAL}
+    include_query_examples: ${env:RADAR_QAN_POSTGRES_QUERY_EXAMPLES}
+  filelog:
+    include:
+      - /var/log/pods/*/*/*.log
+    start_at: end
+    include_file_path: true
+    include_file_name: false
+    operators:
+      - type: container
   hostmetrics:
     collection_interval: ${env:RADAR_HOST_METRICS_INTERVAL}
 
@@ -40,6 +54,10 @@ exporters:
       initial_interval: 1s
       max_interval: 10s
       max_elapsed_time: 30s
+  radarqan:
+    endpoint: ${env:RADAR_GATEWAY_OTLP_ENDPOINT}
+    api_key: ${env:RADAR_GATEWAY_API_KEY}
+    timeout: 10s
 
 service:
   extensions: [health_check]
@@ -58,6 +76,10 @@ service:
       processors: [memory_limiter, batch]
       exporters: [otlphttp/radar-gateway]
     logs:
-      receivers: [otlp]
+      receivers: [otlp, filelog]
       processors: [memory_limiter, batch]
       exporters: [otlphttp/radar-gateway]
+    logs/qan:
+      receivers: [postgresqan]
+      processors: [memory_limiter, batch]
+      exporters: [radarqan]
