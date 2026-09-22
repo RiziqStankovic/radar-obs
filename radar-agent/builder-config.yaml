@@ -1,34 +1,23 @@
+# OCB distribution for the independently deployed radar-agent.
+# Keep this pinned to the same Contrib release as radar-gateway and homelab.
 dist:
-  module: gitrepo.xlaxiata.id/radar/radar-agent
+  module: gitrepo.xlaxiata.id/radar/radar-agent-collector
   name: radar-agent
-  description: Radar Agent based on OpenTelemetry Collector Contrib
-  version: 0.1.0
+  description: Radar node-local OpenTelemetry Collector
+  version: 0.158.0
   output_path: ./generated
+  otelcol_version: 0.158.0
 
 receivers:
-  - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v0.161.0
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.161.0
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/kubeletstatsreceiver v0.161.0
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/filelogreceiver v0.161.0
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/k8sobjectsreceiver v0.161.0
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/k8sclusterreceiver v0.161.0
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/k8seventsreceiver v0.161.0
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/postgresqlreceiver v0.161.0
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/mysqlreceiver v0.161.0
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/mongodbreceiver v0.161.0
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/redisreceiver v0.161.0
+  - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v0.158.0
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.158.0
 
 processors:
-  - gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.161.0
-  - gomod: go.opentelemetry.io/collector/processor/memorylimiterprocessor v0.161.0
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sattributesprocessor v1.0.0
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.161.0
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/transformprocessor v0.161.0
+  - gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.158.0
+  - gomod: go.opentelemetry.io/collector/processor/memorylimiterprocessor v0.158.0
 
 exporters:
-  - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v0.161.0
-  - gomod: go.opentelemetry.io/collector/exporter/debugexporter v0.161.0
+  - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v0.158.0
 
 extensions:
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension v0.161.0
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/k8sleaderelector v0.161.0
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension v0.158.0

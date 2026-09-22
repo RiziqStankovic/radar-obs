@@ -1,0 +1,63 @@
+extensions:
+  health_check:
+    endpoint: ${env:RADAR_AGENT_HEALTH_ENDPOINT}
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: ${env:RADAR_AGENT_OTLP_GRPC_ENDPOINT}
+      http:
+        endpoint: ${env:RADAR_AGENT_OTLP_HTTP_ENDPOINT}
+  hostmetrics:
+    collection_interval: ${env:RADAR_HOST_METRICS_INTERVAL}
+
+    scrapers:
+      cpu: {}
+      disk: {}
+      filesystem: {}
+      load: {}
+      memory: {}
+      network: {}
+      paging: {}
+      processes: {}
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 80
+    spike_limit_percentage: 15
+  batch:
+    timeout: 2s
+    send_batch_size: 1024
+
+exporters:
+  otlphttp/radar-gateway:
+    endpoint: ${env:RADAR_GATEWAY_OTLP_ENDPOINT}
+    compression: gzip
+    retry_on_failure:
+      enabled: true
+      initial_interval: 1s
+      max_interval: 10s
+      max_elapsed_time: 30s
+
+service:
+  extensions: [health_check]
+  telemetry:
+    logs:
+      level: ${env:RADAR_LOG_LEVEL}
+    metrics:
+      level: none
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlphttp/radar-gateway]
+    metrics:
+      receivers: [otlp, hostmetrics]
+      processors: [memory_limiter, batch]
+      exporters: [otlphttp/radar-gateway]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlphttp/radar-gateway]

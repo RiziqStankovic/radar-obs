@@ -1,0 +1,22 @@
+# OCB distribution for the independently deployed radar-gateway.
+# Native ClickHouse persistence is provided by Contrib clickhouseexporter.
+dist:
+  module: gitrepo.xlaxiata.id/radar/radar-gateway-collector
+  name: radar-gateway
+  description: Radar centralized OpenTelemetry Collector with ClickHouse persistence
+  version: 0.158.0
+  output_path: ./generated
+  otelcol_version: 0.158.0
+
+receivers:
+  - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v0.158.0
+
+processors:
+  - gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.158.0
+  - gomod: go.opentelemetry.io/collector/processor/memorylimiterprocessor v0.158.0
+
+exporters:
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/clickhouseexporter v0.158.0
+
+extensions:
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension v0.158.0

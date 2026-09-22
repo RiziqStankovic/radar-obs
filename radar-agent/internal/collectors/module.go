@@ -1,6 +1,10 @@
 package collectors
 
-import "context"
+import (
+	"context"
+
+	"gitrepo.xlaxiata.id/radar/radar-agent/internal/qan"
+)
 
 type Status string
 
@@ -21,6 +25,10 @@ type Event struct {
 
 type Sink interface {
 	Publish(context.Context, Event) error
+}
+
+type QANSink interface {
+	PublishQAN(context.Context, qan.CollectRequest) error
 }
 
 type Module interface {

@@ -19,7 +19,7 @@ spec:
         - name: radar-agent
           image: "{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
           imagePullPolicy: {{ .Values.agent.image.pullPolicy }}
-          args: ["--config=/etc/radar-agent/otel-config.yaml"]
+          args: ["--config=/etc/radar-agent/collector.yaml"]
           ports:
             - name: otlp-grpc
               containerPort: {{ .Values.agent.ports.otlpGrpc }}
@@ -36,6 +36,16 @@ spec:
               value: "0.0.0.0:{{ .Values.agent.ports.otlpHttp }}"
             - name: RADAR_GATEWAY_OTLP_ENDPOINT
               value: {{ .Values.agent.config.gatewayOtlpEndpoint | quote }}
+            - name: RADAR_COLLECTOR_NODE_ENABLED
+              value: {{ .Values.agent.collectors.node.enabled | quote }}
+            - name: RADAR_COLLECTOR_DATABASE_ENABLED
+              value: {{ .Values.agent.collectors.database.enabled | quote }}
+            - name: RADAR_COLLECTOR_QAN_ENABLED
+              value: {{ .Values.agent.collectors.qan.enabled | quote }}
+            - name: RADAR_QAN_DISABLE_QUERY_EXAMPLES
+              value: {{ (not .Values.agent.collectors.qan.includeQueryExamples) | quote }}
+            - name: RADAR_QAN_TARGETS_FILE
+              value: /etc/radar-agent/qan-targets.yaml
             {{- if .Values.agent.gateway.existingSecret }}
             - name: RADAR_GATEWAY_API_KEY
               valueFrom:
@@ -71,6 +81,15 @@ spec:
             - name: hostfs
               mountPath: /hostfs
               readOnly: true
+            - name: qan-targets
+              mountPath: /etc/radar-agent/qan-targets.yaml
+              subPath: qan-targets.yaml
+              readOnly: true
+{{- range .Values.agent.collectors.database.targets }}
+            - name: db-secret-{{ .name | kebabcase }}
+              mountPath: /etc/radar-agent/secrets/{{ .name | kebabcase }}
+              readOnly: true
+{{- end }}
           livenessProbe:
             httpGet:
               path: /
@@ -89,6 +108,22 @@ spec:
           hostPath:
             path: /
             type: Directory
+        - name: qan-targets
+          configMap:
+            name: {{ include "radar-agent.fullname" . }}-config
+            items:
+              - key: qan-targets.yaml
+                path: qan-targets.yaml
+{{- range .Values.agent.collectors.database.targets }}
+        - name: db-secret-{{ .name | kebabcase }}
+          secret:
+            secretName: {{ .existingSecret | quote }}
+            items:
+              - key: {{ .usernameKey | default "username" | quote }}
+                path: username
+              - key: {{ .passwordKey | default "password" | quote }}
+                path: password
+{{- end }}
       tolerations:
         {{- toYaml .Values.agent.tolerations | nindent 8 }}
       nodeSelector:

@@ -39,10 +39,28 @@ agent:
       ownership: leader
       leaseName: radar-database-collector
       targets: []
+      # Example target. username/password are Secret keys, not plaintext values.
+      # - name: mysql-main
+      #   engine: mysql
+      #   endpoint: mysql.database.svc.cluster.local:3306
+      #   database: app
+      #   existingSecret: radar-mysql-monitoring
+      #   usernameKey: username
+      #   passwordKey: password
+      #   interval: 30s
     qan:
       enabled: false
       ownership: leader
+      leaseName: radar-qan-collector
+      includeQueryExamples: false
       targets: []
+      # Targets are metadata for the database QAN adapter. Credentials must
+      # come from Kubernetes Secrets, never from this values file.
+      # Example:
+      # - name: mysql-main
+      #   databaseTarget: mysql-main
+      #   interval: 60s
+      #   includeQueryExamples: false
   gateway:
     endpoint: ""
     existingSecret: ""

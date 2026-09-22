@@ -1,0 +1,7 @@
+.env
+.env.*
+!.env.example
+
+# OCB output is reproducible and should not be committed.
+radar-agent/generated/
+radar-gateway/generated/

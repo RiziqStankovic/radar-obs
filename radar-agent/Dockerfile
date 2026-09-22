@@ -1,15 +1,13 @@
-FROM otel/opentelemetry-collector-contrib:0.161.0
+# Independently deployed radar-agent Collector distribution.
+FROM golang:1.24-bookworm AS builder
+WORKDIR /src
+COPY builder-config.yaml ./
+RUN go install go.opentelemetry.io/collector/cmd/builder@v0.158.0 \
+    && builder --config=builder-config.yaml --skip-get-modules=false
 
-ENV RADAR_AGENT_HEALTH_ENDPOINT=0.0.0.0:13133 \
-    RADAR_OTLP_GRPC_ENDPOINT=0.0.0.0:4317 \
-    RADAR_OTLP_HTTP_ENDPOINT=0.0.0.0:4318 \
-    RADAR_HOST_METRICS_INTERVAL=30s \
-    RADAR_KUBELET_METRICS_INTERVAL=30s \
-    RADAR_KUBELET_INSECURE_SKIP_VERIFY=false \
-    RADAR_HOST_ROOT_PATH=/hostfs \
-    RADAR_GATEWAY_OTLP_ENDPOINT=http://radar-gateway:4318
-
-COPY config/otel-config.yaml /etc/radar-agent/otel-config.yaml
+FROM gcr.io/distroless/base-debian12:nonroot
+COPY --from=builder /src/generated/radar-agent /radar-agent
+COPY config/collector.yaml /etc/radar-agent/collector.yaml
 EXPOSE 4317 4318 13133
-ENTRYPOINT ["/otelcol-contrib"]
-CMD ["--config=/etc/radar-agent/otel-config.yaml"]
+ENTRYPOINT ["/radar-agent"]
+CMD ["--config=/etc/radar-agent/collector.yaml"]
