@@ -20,6 +20,12 @@ spec:
           image: "{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
           imagePullPolicy: {{ .Values.agent.image.pullPolicy }}
           args: ["--config=/etc/radar-agent/collector.yaml"]
+          # Kubernetes pod logs are commonly root:root 0640 on the node.
+          # The filelog receiver needs read access to the host log files.
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            runAsNonRoot: false
           ports:
             - name: otlp-grpc
               containerPort: {{ .Values.agent.ports.otlpGrpc }}
