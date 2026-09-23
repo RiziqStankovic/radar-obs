@@ -6,6 +6,6 @@
 radar-agent/generated/
 radar-gateway/generated/
 
-radar-agent/
+# radar-agent/
 radar-gateway/
 radar-gateway-chart/
