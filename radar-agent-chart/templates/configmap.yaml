@@ -50,6 +50,10 @@ data:
         agent_id: ${env:RADAR_QAN_AGENT_ID}
         interval: ${env:RADAR_QAN_POSTGRES_INTERVAL}
         include_query_examples: ${env:RADAR_QAN_POSTGRES_QUERY_EXAMPLES}
+        ownership: ${env:RADAR_QAN_OWNERSHIP}
+        lease_name: ${env:RADAR_QAN_LEASE_NAME}
+        lease_namespace: ${env:RADAR_QAN_LEASE_NAMESPACE}
+        lease_identity: ${env:RADAR_QAN_LEASE_IDENTITY}
 {{- end }}
     processors:
       memory_limiter:
