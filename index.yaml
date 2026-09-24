@@ -3,6 +3,16 @@ entries:
   radar-agent-chart:
   - apiVersion: v2
     appVersion: 0.1.0
+    created: "2026-09-24T10:47:15.861333749Z"
+    description: Radar Agent unified collector runtime
+    digest: c75828af70e6febeea2bfd6261232c195f065dd9090cbd00787c177b3eb36c98
+    name: radar-agent-chart
+    type: application
+    urls:
+    - https://RiziqStankovic.github.io/radar-obs/radar-agent-chart-0.1.7.tgz
+    version: 0.1.7
+  - apiVersion: v2
+    appVersion: 0.1.0
     created: "2026-09-24T10:10:53.100288245Z"
     description: Radar Agent unified collector runtime
     digest: 06b17de347bbe424a46d4ce8e5ef624193b756bd229435706a55c190e7fe5aeb
@@ -71,4 +81,4 @@ entries:
     urls:
     - https://RiziqStankovic.github.io/radar-obs/radar-agent-chart-0.1.0.tgz
     version: 0.1.0
-generated: "2026-09-24T10:10:53.098789937Z"
+generated: "2026-09-24T10:47:15.860949935Z"
