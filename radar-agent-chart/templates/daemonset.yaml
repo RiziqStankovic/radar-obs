@@ -43,7 +43,7 @@ spec:
             - name: RADAR_GATEWAY_OTLP_ENDPOINT
               value: {{ .Values.agent.config.gatewayOtlpEndpoint | quote }}
             - name: RADAR_GATEWAY_API_ENDPOINT
-              value: {{ .Values.agent.config.gatewayApiEndpoint | default "http://radar-gateway-api:4320" | quote }}
+              value: {{ .Values.agent.config.gatewayApiEndpoint | default "http://radar-gateway:4318" | quote }}
             - name: RADAR_COLLECTOR_NODE_ENABLED
               value: {{ .Values.agent.collectors.node.enabled | quote }}
             - name: RADAR_COLLECTOR_DATABASE_ENABLED
@@ -95,16 +95,8 @@ spec:
               value: {{ .Values.agent.collectors.qan.includeQueryExamples | quote }}
             - name: RADAR_QAN_AGENT_ID
               value: {{ include "radar-agent.fullname" . | quote }}
-            {{- if .Values.agent.gateway.existingSecret }}
             - name: RADAR_GATEWAY_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.agent.gateway.existingSecret | quote }}
-                  key: api-key
-            {{- else if .Values.agent.config.gatewayApiKey }}
-            - name: RADAR_GATEWAY_API_KEY
-              value: {{ .Values.agent.config.gatewayApiKey | quote }}
-            {{- end }}
+              value: {{ .Values.agent.config.gatewayApiKey | default "" | quote }}
             - name: NO_PROXY
               value: ".svc,.svc.cluster.local,.cluster.local,localhost,127.0.0.1"
             - name: no_proxy

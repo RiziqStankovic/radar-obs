@@ -89,7 +89,10 @@ data:
         agent_id: ${env:RADAR_QAN_AGENT_ID}
         interval: ${env:RADAR_QAN_POSTGRES_INTERVAL}
         include_query_examples: ${env:RADAR_QAN_POSTGRES_QUERY_EXAMPLES}
-        database_lease_name: ${env:RADAR_DATABASE_LEASE_NAME}
+        lease_name: ${env:RADAR_QAN_LEASE_NAME}
+        lease_namespace: ${env:RADAR_QAN_LEASE_NAMESPACE}
+        lease_identity: ${env:RADAR_QAN_LEASE_IDENTITY}
+        database_lease_name: ${env:RADAR_QAN_DATABASE_LEASE_NAME}
 {{- end }}
     processors:
       memory_limiter:
@@ -102,8 +105,10 @@ data:
     exporters:
       otlphttp/radar-gateway:
         endpoint: ${env:RADAR_GATEWAY_OTLP_ENDPOINT}
+{{- if or .Values.agent.gateway.existingSecret .Values.agent.config.gatewayApiKey }}
         headers:
           authorization: Bearer ${env:RADAR_GATEWAY_API_KEY}
+{{- end }}
         compression: gzip
         retry_on_failure:
           enabled: true
@@ -113,7 +118,9 @@ data:
 {{- if .Values.agent.collectors.qan.enabled }}
       radarqan:
         endpoint: ${env:RADAR_GATEWAY_API_ENDPOINT}
+{{- if or .Values.agent.gateway.existingSecret .Values.agent.config.gatewayApiKey }}
         api_key: ${env:RADAR_GATEWAY_API_KEY}
+{{- end }}
         timeout: 10s
 {{- end }}
     service:
