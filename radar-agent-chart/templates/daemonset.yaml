@@ -44,30 +44,41 @@ spec:
               value: {{ .Values.agent.config.gatewayOtlpEndpoint | quote }}
             - name: RADAR_COLLECTOR_NODE_ENABLED
               value: {{ .Values.agent.collectors.node.enabled | quote }}
-            - name: RADAR_COLLECTOR_CLUSTER_ENABLED
-              value: {{ .Values.agent.collectors.cluster.enabled | quote }}
-            - name: RADAR_CLUSTER_ID
-              value: {{ .Values.global.clusterId | quote }}
-            - name: RADAR_TENANT_ID
-              value: {{ .Values.global.tenantId | quote }}
-            - name: RADAR_CLUSTER_INTERVAL
-              value: {{ .Values.agent.collectors.cluster.interval | default "60s" | quote }}
-            - name: RADAR_CLUSTER_OWNERSHIP
-              value: {{ .Values.agent.collectors.cluster.ownership | default "leader" | quote }}
-            - name: RADAR_CLUSTER_LEASE_NAME
-              value: {{ .Values.agent.collectors.cluster.leaseName | default "radar-cluster-collector" | quote }}
-            - name: RADAR_CLUSTER_LEASE_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: RADAR_CLUSTER_LEASE_IDENTITY
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
             - name: RADAR_COLLECTOR_DATABASE_ENABLED
               value: {{ .Values.agent.collectors.database.enabled | quote }}
             - name: RADAR_COLLECTOR_QAN_ENABLED
               value: {{ .Values.agent.collectors.qan.enabled | quote }}
+            - name: RADAR_CLUSTER_INTERVAL
+              value: {{ .Values.agent.collectors.cluster.interval | default "30s" | quote }}
+            - name: RADAR_CLUSTER_LEASE_NAME
+              value: {{ .Values.agent.collectors.cluster.leaseName | quote }}
+            - name: RADAR_CLUSTER_LEASE_NAMESPACE
+              value: {{ .Values.agent.collectors.cluster.leaseNamespace | default .Release.Namespace | quote }}
+            - name: RADAR_DATABASE_POSTGRES_ENDPOINT
+              value: {{ .Values.agent.collectors.database.postgres.endpoint | quote }}
+            - name: RADAR_DATABASE_POSTGRES_USERNAME
+              value: {{ .Values.agent.collectors.database.postgres.username | quote }}
+            - name: RADAR_DATABASE_POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.agent.collectors.database.postgres.existingSecret | quote }}
+                  key: {{ .Values.agent.collectors.database.postgres.passwordKey | default "password" | quote }}
+            - name: RADAR_DATABASE_POSTGRES_INTERVAL
+              value: {{ .Values.agent.collectors.database.postgres.interval | default "30s" | quote }}
+            - name: RADAR_DATABASE_OWNERSHIP
+              value: {{ .Values.agent.collectors.database.ownership | quote }}
+            - name: RADAR_DATABASE_LEASE_NAME
+              value: {{ .Values.agent.collectors.database.leaseName | quote }}
+            - name: RADAR_DATABASE_LEASE_NAMESPACE
+              value: {{ .Values.agent.collectors.database.leaseNamespace | default .Release.Namespace | quote }}
+            - name: RADAR_DATABASE_LEASE_IDENTITY
+              value: {{ include "radar-agent.fullname" . | quote }}
+            - name: RADAR_QAN_DATABASE_LEASE_NAME
+              value: {{ .Values.agent.collectors.database.leaseName | quote }}
+            - name: RADAR_QAN_LEASE_NAMESPACE
+              value: {{ .Values.agent.collectors.qan.leaseNamespace | default .Release.Namespace | quote }}
+            - name: RADAR_QAN_LEASE_IDENTITY
+              value: {{ include "radar-agent.fullname" . | quote }}
             - name: RADAR_QAN_DISABLE_QUERY_EXAMPLES
               value: {{ (not .Values.agent.collectors.qan.includeQueryExamples) | quote }}
             - name: RADAR_QAN_POSTGRES_DSN
@@ -78,18 +89,6 @@ spec:
               value: {{ .Values.agent.collectors.qan.interval | default "60s" | quote }}
             - name: RADAR_QAN_POSTGRES_QUERY_EXAMPLES
               value: {{ .Values.agent.collectors.qan.includeQueryExamples | quote }}
-            - name: RADAR_QAN_OWNERSHIP
-              value: {{ .Values.agent.collectors.qan.ownership | default "leader" | quote }}
-            - name: RADAR_QAN_LEASE_NAME
-              value: {{ .Values.agent.collectors.qan.leaseName | default "radar-qan-collector" | quote }}
-            - name: RADAR_QAN_LEASE_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: RADAR_QAN_LEASE_IDENTITY
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
             - name: RADAR_QAN_AGENT_ID
               value: {{ include "radar-agent.fullname" . | quote }}
             {{- if .Values.agent.gateway.existingSecret }}

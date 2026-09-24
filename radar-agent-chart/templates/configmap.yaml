@@ -12,6 +12,13 @@ data:
     extensions:
       health_check:
         endpoint: ${env:RADAR_AGENT_HEALTH_ENDPOINT}
+      k8s_leader_elector:
+        auth_type: serviceAccount
+        lease_name: ${env:RADAR_CLUSTER_LEASE_NAME}
+        lease_namespace: ${env:RADAR_CLUSTER_LEASE_NAMESPACE}
+        lease_duration: 15s
+        renew_deadline: 10s
+        retry_period: 2s
     receivers:
       otlp:
         protocols:
@@ -19,6 +26,38 @@ data:
             endpoint: ${env:RADAR_OTLP_GRPC_ENDPOINT}
           http:
             endpoint: ${env:RADAR_OTLP_HTTP_ENDPOINT}
+{{- if .Values.agent.collectors.cluster.enabled }}
+      k8s_cluster:
+        auth_type: serviceAccount
+        collection_interval: ${env:RADAR_CLUSTER_INTERVAL}
+        k8s_leader_elector: k8s_leader_elector
+      k8s_events:
+        auth_type: serviceAccount
+        k8s_leader_elector: k8s_leader_elector
+      k8s_objects:
+        auth_type: serviceAccount
+        k8s_leader_elector: k8s_leader_elector
+        objects:
+          - name: jobs
+            mode: watch
+          - name: cronjobs
+            mode: watch
+{{- end }}
+{{- if .Values.agent.collectors.database.enabled }}
+      postgresqlownership:
+        endpoint: ${env:RADAR_DATABASE_POSTGRES_ENDPOINT}
+        username: ${env:RADAR_DATABASE_POSTGRES_USERNAME}
+        password: ${env:RADAR_DATABASE_POSTGRES_PASSWORD}
+        databases:
+{{- range .Values.agent.collectors.database.postgres.databases }}
+          - {{ . | quote }}
+{{- end }}
+        collection_interval: ${env:RADAR_DATABASE_POSTGRES_INTERVAL}
+        ownership: ${env:RADAR_DATABASE_OWNERSHIP}
+        lease_name: ${env:RADAR_DATABASE_LEASE_NAME}
+        lease_namespace: ${env:RADAR_DATABASE_LEASE_NAMESPACE}
+        lease_identity: ${env:RADAR_DATABASE_LEASE_IDENTITY}
+{{- end }}
 {{- if and .Values.agent.collectors.node.enabled .Values.agent.collectors.node.hostMetrics }}
       hostmetrics:
         collection_interval: ${env:RADAR_HOST_METRICS_INTERVAL}
@@ -43,16 +82,6 @@ data:
         operators:
           - type: container
 {{- end }}
-{{- if .Values.agent.collectors.cluster.enabled }}
-      cluster:
-        interval: ${env:RADAR_CLUSTER_INTERVAL}
-        cluster_id: ${env:RADAR_CLUSTER_ID}
-        tenant_id: ${env:RADAR_TENANT_ID}
-        ownership: ${env:RADAR_CLUSTER_OWNERSHIP}
-        lease_name: ${env:RADAR_CLUSTER_LEASE_NAME}
-        lease_namespace: ${env:RADAR_CLUSTER_LEASE_NAMESPACE}
-        lease_identity: ${env:RADAR_CLUSTER_LEASE_IDENTITY}
-{{- end }}
 {{- if .Values.agent.collectors.qan.enabled }}
       postgresqan:
         dsn: ${env:RADAR_QAN_POSTGRES_DSN}
@@ -60,10 +89,7 @@ data:
         agent_id: ${env:RADAR_QAN_AGENT_ID}
         interval: ${env:RADAR_QAN_POSTGRES_INTERVAL}
         include_query_examples: ${env:RADAR_QAN_POSTGRES_QUERY_EXAMPLES}
-        ownership: ${env:RADAR_QAN_OWNERSHIP}
-        lease_name: ${env:RADAR_QAN_LEASE_NAME}
-        lease_namespace: ${env:RADAR_QAN_LEASE_NAMESPACE}
-        lease_identity: ${env:RADAR_QAN_LEASE_IDENTITY}
+        database_lease_name: ${env:RADAR_DATABASE_LEASE_NAME}
 {{- end }}
     processors:
       memory_limiter:
@@ -71,7 +97,7 @@ data:
         limit_percentage: 80
         spike_limit_percentage: 15
       batch:
-        timeout: 5s
+        timeout: 2s
         send_batch_size: 1024
     exporters:
       otlphttp/radar-gateway:
@@ -84,12 +110,6 @@ data:
           initial_interval: 1s
           max_interval: 10s
           max_elapsed_time: 30s
-{{- if .Values.agent.collectors.cluster.enabled }}
-      radarcluster:
-        endpoint: ${env:RADAR_GATEWAY_OTLP_ENDPOINT}
-        api_key: ${env:RADAR_GATEWAY_API_KEY}
-        timeout: 10s
-{{- end }}
 {{- if .Values.agent.collectors.qan.enabled }}
       radarqan:
         endpoint: ${env:RADAR_GATEWAY_OTLP_ENDPOINT}
@@ -97,7 +117,7 @@ data:
         timeout: 10s
 {{- end }}
     service:
-      extensions: [health_check]
+      extensions: [health_check, k8s_leader_elector]
       pipelines:
         traces:
           receivers: [otlp]
@@ -111,6 +131,22 @@ data:
 {{- end }}
           processors: [memory_limiter, batch]
           exporters: [otlphttp/radar-gateway]
+{{- if .Values.agent.collectors.cluster.enabled }}
+        metrics/cluster:
+          receivers: [k8s_cluster]
+          processors: [memory_limiter, batch]
+          exporters: [otlphttp/radar-gateway]
+        logs/kubernetes:
+          receivers: [k8s_events, k8s_objects]
+          processors: [memory_limiter, batch]
+          exporters: [otlphttp/radar-gateway]
+{{- end }}
+{{- if .Values.agent.collectors.database.enabled }}
+        metrics/database:
+          receivers: [postgresqlownership]
+          processors: [memory_limiter, batch]
+          exporters: [otlphttp/radar-gateway]
+{{- end }}
         logs:
           receivers:
             - otlp
@@ -119,12 +155,6 @@ data:
 {{- end }}
           processors: [memory_limiter, batch]
           exporters: [otlphttp/radar-gateway]
-{{- if .Values.agent.collectors.cluster.enabled }}
-        logs/cluster:
-          receivers: [cluster]
-          processors: [memory_limiter, batch]
-          exporters: [radarcluster]
-{{- end }}
 {{- if .Values.agent.collectors.qan.enabled }}
         logs/qan:
           receivers: [postgresqan]
