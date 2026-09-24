@@ -16,6 +16,7 @@ agent:
   config:
     healthEndpoint: 0.0.0.0:13133
     gatewayOtlpEndpoint: http://radar-gateway:4318
+    gatewayApiEndpoint: http://radar-gateway-api:4320
     gatewayApiKey: ""
     hostMetricsInterval: 30s
     kubeletMetricsInterval: 30s

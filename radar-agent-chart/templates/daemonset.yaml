@@ -42,6 +42,8 @@ spec:
               value: "0.0.0.0:{{ .Values.agent.ports.otlpHttp }}"
             - name: RADAR_GATEWAY_OTLP_ENDPOINT
               value: {{ .Values.agent.config.gatewayOtlpEndpoint | quote }}
+            - name: RADAR_GATEWAY_API_ENDPOINT
+              value: {{ .Values.agent.config.gatewayApiEndpoint | default "http://radar-gateway-api:4320" | quote }}
             - name: RADAR_COLLECTOR_NODE_ENABLED
               value: {{ .Values.agent.collectors.node.enabled | quote }}
             - name: RADAR_COLLECTOR_DATABASE_ENABLED
@@ -54,6 +56,7 @@ spec:
               value: {{ .Values.agent.collectors.cluster.leaseName | quote }}
             - name: RADAR_CLUSTER_LEASE_NAMESPACE
               value: {{ .Values.agent.collectors.cluster.leaseNamespace | default .Release.Namespace | quote }}
+{{- if .Values.agent.collectors.database.enabled }}
             - name: RADAR_DATABASE_POSTGRES_ENDPOINT
               value: {{ .Values.agent.collectors.database.postgres.endpoint | quote }}
             - name: RADAR_DATABASE_POSTGRES_USERNAME
@@ -65,6 +68,7 @@ spec:
                   key: {{ .Values.agent.collectors.database.postgres.passwordKey | default "password" | quote }}
             - name: RADAR_DATABASE_POSTGRES_INTERVAL
               value: {{ .Values.agent.collectors.database.postgres.interval | default "30s" | quote }}
+{{- end }}
             - name: RADAR_DATABASE_OWNERSHIP
               value: {{ .Values.agent.collectors.database.ownership | quote }}
             - name: RADAR_DATABASE_LEASE_NAME

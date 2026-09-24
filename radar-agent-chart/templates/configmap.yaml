@@ -112,7 +112,7 @@ data:
           max_elapsed_time: 30s
 {{- if .Values.agent.collectors.qan.enabled }}
       radarqan:
-        endpoint: ${env:RADAR_GATEWAY_OTLP_ENDPOINT}
+        endpoint: ${env:RADAR_GATEWAY_API_ENDPOINT}
         api_key: ${env:RADAR_GATEWAY_API_KEY}
         timeout: 10s
 {{- end }}
