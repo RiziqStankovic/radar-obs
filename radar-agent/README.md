@@ -27,6 +27,39 @@ OTLP HTTP endpoints on `:4318`:
 
 Copy the repository `.env.example` to `.env`. Set `RADAR_GATEWAY_OTLP_ENDPOINT=http://127.0.0.1:4319` when running the local gateway alongside the agent. Agent and gateway are separate processes and have separate port/health configuration.
 
+## Cluster-wide collection
+
+Cluster collection is disabled by default. When enabled in the Helm chart, the production OCB agent uses the Kubernetes API and a Kubernetes Lease so only one DaemonSet pod collects the cluster-wide snapshot. The snapshot includes node, pod, namespace, service, and deployment counts and is sent as a `cluster` event to `/v1/radar/events`.
+
+Enable it with:
+
+```yaml
+agent:
+  collectors:
+    cluster:
+      enabled: true
+      ownership: leader
+      leaseName: radar-cluster-collector
+      interval: 60s
+global:
+  clusterId: devops-tencent-production
+  tenantId: devops-radar
+```
+
+The chart grants read access to the Kubernetes resources and Lease coordination. Cluster events are currently stored in ClickHouse `radar_events` with `signal = 'cluster'`; they are not QAN rows and do not appear in `qan_metrics`.
+
+Verify recent snapshots with:
+
+```sql
+SELECT received_at, signal, source, payload
+FROM radar_events
+WHERE signal = 'cluster'
+ORDER BY received_at DESC
+LIMIT 5;
+```
+
+The agent image must be rebuilt from `builder-config.yaml` after changing the custom receiver/exporter. Setting the Helm flag alone does not add the components to an old image.
+
 ## Query Analytics
 
 QAN is disabled by default. Enable it only with database collection enabled:

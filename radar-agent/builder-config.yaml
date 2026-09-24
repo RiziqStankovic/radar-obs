@@ -15,6 +15,9 @@ receivers:
   - gomod: gitrepo.xlaxiata.id/radar/radar-agent-otel-modules v0.0.0
     import: gitrepo.xlaxiata.id/radar/radar-agent-otel-modules/receiver/postgresqanreceiver
     path: ./otel-modules
+  - gomod: gitrepo.xlaxiata.id/radar/radar-agent-otel-modules v0.0.0
+    import: gitrepo.xlaxiata.id/radar/radar-agent-otel-modules/receiver/clusterreceiver
+    path: ./otel-modules
 
 processors:
   - gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.158.0
@@ -24,6 +27,9 @@ exporters:
   - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v0.158.0
   - gomod: gitrepo.xlaxiata.id/radar/radar-agent-otel-modules v0.0.0
     import: gitrepo.xlaxiata.id/radar/radar-agent-otel-modules/exporter/radarqanexporter
+    path: ./otel-modules
+  - gomod: gitrepo.xlaxiata.id/radar/radar-agent-otel-modules v0.0.0
+    import: gitrepo.xlaxiata.id/radar/radar-agent-otel-modules/exporter/radarclusterexporter
     path: ./otel-modules
 
 extensions:

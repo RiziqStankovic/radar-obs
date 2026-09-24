@@ -34,6 +34,7 @@ agent:
       enabled: false
       ownership: leader
       leaseName: radar-cluster-collector
+      interval: 60s
     database:
       enabled: false
       ownership: leader

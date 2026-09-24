@@ -44,6 +44,26 @@ spec:
               value: {{ .Values.agent.config.gatewayOtlpEndpoint | quote }}
             - name: RADAR_COLLECTOR_NODE_ENABLED
               value: {{ .Values.agent.collectors.node.enabled | quote }}
+            - name: RADAR_COLLECTOR_CLUSTER_ENABLED
+              value: {{ .Values.agent.collectors.cluster.enabled | quote }}
+            - name: RADAR_CLUSTER_ID
+              value: {{ .Values.global.clusterId | quote }}
+            - name: RADAR_TENANT_ID
+              value: {{ .Values.global.tenantId | quote }}
+            - name: RADAR_CLUSTER_INTERVAL
+              value: {{ .Values.agent.collectors.cluster.interval | default "60s" | quote }}
+            - name: RADAR_CLUSTER_OWNERSHIP
+              value: {{ .Values.agent.collectors.cluster.ownership | default "leader" | quote }}
+            - name: RADAR_CLUSTER_LEASE_NAME
+              value: {{ .Values.agent.collectors.cluster.leaseName | default "radar-cluster-collector" | quote }}
+            - name: RADAR_CLUSTER_LEASE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: RADAR_CLUSTER_LEASE_IDENTITY
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: RADAR_COLLECTOR_DATABASE_ENABLED
               value: {{ .Values.agent.collectors.database.enabled | quote }}
             - name: RADAR_COLLECTOR_QAN_ENABLED
