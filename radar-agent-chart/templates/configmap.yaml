@@ -92,7 +92,6 @@ data:
         lease_name: ${env:RADAR_QAN_LEASE_NAME}
         lease_namespace: ${env:RADAR_QAN_LEASE_NAMESPACE}
         lease_identity: ${env:RADAR_QAN_LEASE_IDENTITY}
-        database_lease_name: ${env:RADAR_QAN_DATABASE_LEASE_NAME}
 {{- end }}
     processors:
       memory_limiter:

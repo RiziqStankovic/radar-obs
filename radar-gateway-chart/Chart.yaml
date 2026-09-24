@@ -1,6 +1,0 @@
-apiVersion: v2
-name: radar-gateway
-description: Internal Radar gateway service for OTLP and QAN ingestion
-type: application
-version: 0.1.0
-appVersion: "dev"
