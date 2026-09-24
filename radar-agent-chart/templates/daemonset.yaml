@@ -79,8 +79,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-            - name: RADAR_QAN_DATABASE_LEASE_NAME
-              value: {{ .Values.agent.collectors.database.leaseName | quote }}
+            - name: RADAR_QAN_LEASE_NAME
+              value: {{ .Values.agent.collectors.qan.leaseName | default "radar-qan-collector" | quote }}
             - name: RADAR_QAN_LEASE_NAMESPACE
               value: {{ .Values.agent.collectors.qan.leaseNamespace | default .Release.Namespace | quote }}
             - name: RADAR_QAN_LEASE_IDENTITY
