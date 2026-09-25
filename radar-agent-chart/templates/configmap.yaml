@@ -72,6 +72,15 @@ data:
           paging: {}
           processes: {}
 {{- end }}
+{{- if and .Values.agent.collectors.node.enabled .Values.agent.collectors.node.kubeletMetrics }}
+      kubeletstats:
+        collection_interval: ${env:RADAR_KUBELET_METRICS_INTERVAL}
+        auth_type: serviceAccount
+        endpoint: https://${env:K8S_NODE_NAME}:10250
+        insecure_skip_verify: ${env:RADAR_KUBELET_INSECURE_SKIP_VERIFY}
+        k8s_api_config:
+          auth_type: serviceAccount
+{{- end }}
 {{- if and .Values.agent.collectors.node.enabled .Values.agent.collectors.node.logs }}
       filelog:
         include:
@@ -98,6 +107,19 @@ data:
         check_interval: 1s
         limit_percentage: 80
         spike_limit_percentage: 15
+      resource/host_identity:
+        attributes:
+          - key: k8s.node.name
+            from_attribute: host.name
+            action: upsert
+      resource/kubelet_identity:
+        attributes:
+          - key: k8s.node.name
+            value: ${env:K8S_NODE_NAME}
+            action: upsert
+          - key: host.name
+            value: ${env:K8S_NODE_NAME}
+            action: upsert
       batch:
         timeout: 2s
         send_batch_size: 1024
@@ -135,7 +157,10 @@ data:
 {{- if and .Values.agent.collectors.node.enabled .Values.agent.collectors.node.hostMetrics }}
             - hostmetrics
 {{- end }}
-          processors: [memory_limiter, batch]
+{{- if and .Values.agent.collectors.node.enabled .Values.agent.collectors.node.kubeletMetrics }}
+            - kubeletstats
+{{- end }}
+          processors: [memory_limiter, resource/host_identity, resource/kubelet_identity, batch]
           exporters: [otlphttp/radar-gateway]
 {{- if .Values.agent.collectors.cluster.enabled }}
         metrics/cluster:

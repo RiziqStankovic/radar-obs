@@ -105,8 +105,10 @@ spec:
               value: ".svc,.svc.cluster.local,.cluster.local,localhost,127.0.0.1"
             - name: no_proxy
               value: ".svc,.svc.cluster.local,.cluster.local,localhost,127.0.0.1"
-            - name: RADAR_HOST_METRICS_INTERVAL
-              value: {{ .Values.agent.config.hostMetricsInterval | quote }}
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
             - name: RADAR_KUBELET_METRICS_INTERVAL
               value: {{ .Values.agent.config.kubeletMetricsInterval | quote }}
             - name: RADAR_KUBELET_ENDPOINT

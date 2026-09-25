@@ -10,7 +10,7 @@ rules:
     resources: ["pods", "nodes", "namespaces", "services", "endpoints"]
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
-    resources: ["nodes/stats"]
+    resources: ["nodes/stats", "nodes/proxy", "nodes/metrics"]
     verbs: ["get"]
   - apiGroups: ["apps"]
     resources: ["replicasets", "deployments", "statefulsets", "daemonsets"]
